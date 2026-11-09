@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Por qué un fractal no cabe en la geometría euclidiana?</title>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--ink:#1d2530;--mut:#5d6877;--a:#c8431f;--b:#1f6f8b;--line:#dcd9d0;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b222b;--ink:#e8ecf1;--mut:#9aa6b4;--a:#ff8a65;--b:#6cc4e0;--line:#2e3846;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b222b;--ink:#e8ecf1;--mut:#9aa6b4;--a:#ff8a65;--b:#6cc4e0;--line:#2e3846;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.2;margin:.2em 0}
+h2{font-size:1.35rem;margin:0 0 .3em}
+.tag{color:var(--a);font-weight:700;letter-spacing:.08em;font-size:.8rem;text-transform:uppercase}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:20px 0}
+blockquote{margin:12px 0;padding:10px 16px;border-left:4px solid var(--a);background:color-mix(in srgb,var(--a) 8%,transparent);border-radius:0 10px 10px 0;font-size:1.05rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+canvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--bg) 60%,var(--card))}
+.lab{font-size:.85rem;color:var(--mut);margin:6px 0 2px;font-weight:600}
+.ctl{display:flex;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap}
+.ctl label{font-weight:600}
+input[type=range]{flex:1;min-width:160px;accent-color:var(--a)}
+.out{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.pill{flex:1;min-width:200px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);font-size:.92rem}
+.pill b{display:block;font-size:1.25rem}
+.k1 b{color:var(--a)}.k2 b{color:var(--b)}
+.obs{margin-top:12px;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--b) 10%,transparent);font-size:.95rem}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin-top:10px}
+td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+.wrap{overflow-x:auto}
+ol{padding-left:1.2em}li{margin:.5em 0}
+.sub{color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<div class="tag">Geometría fractal · propiedad de Falconer</div>
+<h1>¿Por qué un fractal no se puede describir con geometría euclidiana?</h1>
+<p class="sub">Tres experimentos que puedes manipular para descubrir, por ti mismo, por qué se cumple esta propiedad.</p>
+
+<div class="card">
+<h2>La propiedad</h2>
+<blockquote>El fractal es demasiado irregular para describirse con el lenguaje geométrico tradicional, tanto <b>local</b> como <b>globalmente</b>.</blockquote>
+<p>La geometría de Euclides describe las formas con rectas, círculos, superficies, tangentes, longitudes y áreas. Esas herramientas funcionan porque las formas “suaves” se vuelven simples al acercarse. Vamos a comprobar qué pasa con un fractal, la <b>curva de Koch</b> (nivel 7), frente a una curva suave.</p>
+<ul>
+<li><b>Local:</b> ¿qué se ve al acercarse a un punto? (Experimento 1)</li>
+<li><b>Medida:</b> ¿tiene sentido hablar de su longitud? (Experimento 2)</li>
+<li><b>Global:</b> ¿es una línea, una superficie o algo intermedio? (Experimento 3)</li>
+</ul>
+</div>
+
+<div class="card">
+<div class="tag">Experimento 1 · Lo local</div>
+<h2>Acercarse a un punto: ¿se “aplana”?</h2>
+<p>Una curva suave, al ampliarla mucho, se confunde con su recta tangente. Acércate al mismo punto en ambas curvas y observa.</p>
+<div class="ctl"><label for="z">Ampliación: <span id="zv">×1</span></label><input id="z" type="range" min="0" max="4" step="0.01" value="0"></div>
+<div class="grid">
+<div><div class="lab">Curva suave (seno)</div><canvas id="c1a"></canvas></div>
+<div><div class="lab">Curva de Koch</div><canvas id="c1b"></canvas></div>
+</div>
+<div class="out">
+<div class="pill k2">Suave: longitud del trazo ÷ distancia entre extremos<b id="r1a"></b></div>
+<div class="pill k1">Koch: longitud del trazo ÷ distancia entre extremos<b id="r1b"></b></div>
+</div>
+<div class="obs">Si el cociente tiende a 1, el trazo es casi un segmento recto (existe tangente). En Koch se mantiene por encima de 1 a toda escala: <b>siempre hay picos y esquinas</b>, no existe recta tangente.</div>
+</div>
+
+<div class="card">
+<div class="tag">Experimento 2 · La longitud</div>
+<h2>Medir con una regla cada vez más pequeña</h2>
+<p>Medimos con un compás de apertura <i>r</i> (cada paso salta de un punto de la curva al siguiente a distancia <i>r</i>). En una curva suave, al achicar <i>r</i> la medida se estabiliza.</p>
+<div class="ctl"><label for="rr">Regla: <span id="rv"></span></label><input id="rr" type="range" min="0.5" max="4.5" step="0.01" value="0.8"></div>
+<canvas id="c2" width="360" height="150"></canvas>
+<div class="out">
+<div class="pill k1">Koch: longitud medida<b id="l2k"></b></div>
+<div class="pill k2">Seno: longitud medida<b id="l2s"></b></div>
+</div>
+<div class="wrap"><table id="tb"></table></div>
+<div class="obs" id="o2"></div>
+</div>
+
+<div class="card">
+<div class="tag">Experimento 3 · Lo global</div>
+<h2>¿Cuántas casillas necesita para cubrirse?</h2>
+<p>Cubre la figura con una cuadrícula de lado 1/<i>m</i> y cuenta las casillas tocadas, <i>N(m)</i>. Una línea necesita ≈ <i>m</i> casillas (crece como <i>m</i>¹), una superficie ≈ <i>m</i>² (crece como <i>m</i>²). Veamos qué hace Koch.</p>
+<div class="ctl"><label for="mm">Cuadrícula: <span id="mv"></span></label><input id="mm" type="range" min="0.7" max="5" step="0.01" value="1.5"></div>
+<div class="grid">
+<div><div class="lab">Casillas tocadas</div><canvas id="c3" width="360" height="170"></canvas></div>
+<div><div class="lab">N(m) en escala logarítmica</div><canvas id="c3b" width="360" height="170"></canvas></div>
+</div>
+<div class="out">
+<div class="pill k1">Casillas tocadas N(m)<b id="n3"></b></div>
+<div class="pill k2">Exponente medido (dimensión)<b id="d3"></b></div>
+</div>
+<div class="obs">Línea: pendiente 1 (gris). Superficie: pendiente 2 (gris punteada). Koch queda <b>entre ambas</b>: ni línea ni superficie.</div>
+</div>
+
+<div class="card">
+<h2>Conclusión: ¿por qué se cumple la propiedad?</h2>
+<ol>
+<li><b>Localmente</b>, el detalle no desaparece al ampliar: no hay tangente ni “zona casi recta”. Las herramientas del cálculo y de Euclides (rectas, ángulos, curvatura) dejan de describir la forma.</li>
+<li><b>La longitud</b> crece sin límite al achicar la regla (cada paso multiplica por 4/3), así que “la longitud de Koch” no es un número finito. Y su área es cero.</li>
+<li><b>Globalmente</b>, su exponente de cobertura es <b id="dd">≈1,26</b>: no es 1 (curva) ni 2 (superficie). Las categorías euclidianas de dimensión entera no la clasifican.</li>
+</ol>
+<p>La causa común: el fractal se genera por un proceso que <b>repite la irregularidad en cada escala</b>. Por eso hacen falta otras herramientas, como la <b>dimensión fractal</b> y la <b>autosemejanza</b>.</p>
+<div class="wrap"><table>
+<tr><th></th><th>Forma euclidiana</th><th>Fractal (Koch)</th></tr>
+<tr><td>Al ampliar</td><td>Se aplana (tangente)</td><td>Sigue rugosa</td></tr>
+<tr><td>Longitud</td><td>Finita y estable</td><td>Crece sin límite</td></tr>
+<tr><td>Dimensión</td><td>Entera (1, 2, 3)</td><td>≈ 1,26 (log 4 / log 3)</td></tr>
+</table></div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function koch(n){let p=[[0,0],[1,0]];const c=.5,s=Math.sqrt(3)/2;
+for(let i=0;i<n;i++){const q=[];for(let j=0;j<p.length-1;j++){const a=p[j],b=p[j+1],dx=(b[0]-a[0])/3,dy=(b[1]-a[1])/3,
+p1=[a[0]+dx,a[1]+dy],p2=[a[0]+2*dx,a[1]+2*dy],pk=[p1[0]+dx*c-dy*s,p1[1]+dx*s+dy*c];q.push(a,p1,pk,p2)}
+q.push(p[p.length-1]);p=q}return p}
+const P=koch(7),N=P.length-1,C=4096;
+const sf=x=>.25*Math.sin(Math.PI*x);
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const sine=[];for(let i=0;i<=20000;i++){const x=i/20000;sine.push([x,sf(x)])}
+function setup(c){const d=window.devicePixelRatio||1,w=c.width,h=c.height;c.width=w*d;c.height=h*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return[x,w,h]}
+const ctxs={};
+function g(id,w,h){const c=$(id);if(w){c.width=w;c.height=h}if(!ctxs[id]){ctxs[id]=setup(c);ctxs[id].push(c.width)}return ctxs[id]}
+function line(x,pts,f,color,lw){x.beginPath();pts.forEach((p,i)=>{const q=f(p);i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1])});x.strokeStyle=color;x.lineWidth=lw;x.lineJoin='round';x.stroke()}
+const fmt=(v,d=2)=>v.toLocaleString('es',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+/* Experimento 1 */
+g('c1a',320,240);g('c1b',320,240);
+function d1(){const z=+$('z').value,s=Math.pow(3,z),k=300*s,h=.4/s;$('zv').textContent='×'+fmt(s,s<10?1:0);
+const cx=P[C][0],cy=P[C][1],cs=1/3,cys=sf(cs);
+let [x,W,H]=g('c1b');x.clearRect(0,0,W,H);
+line(x,P,p=>[W/2+(p[0]-cx)*k,H/2-(p[1]-cy)*k],col('--a'),2);
+x.fillStyle=col('--ink');x.beginPath();x.arc(W/2,H/2,4,0,7);x.fill();
+const inW=p=>Math.abs(p[0]-cx)<=h&&Math.abs(p[1]-cy)<=h;
+let i=C,j=C;while(i>0&&inW(P[i-1]))i--;while(j<N&&inW(P[j+1]))j++;
+let L=0;for(let t=i;t<j;t++)L+=dist(P[t],P[t+1]);
+$('r1b').textContent=fmt(L/dist(P[i],P[j]),3);
+[x,W,H]=g('c1a');x.clearRect(0,0,W,H);
+const sp=[];for(let t=0;t<=300;t++){const xx=cs-.6/s+1.2/s*t/300;sp.push([xx,sf(xx)])}
+line(x,sp,p=>[W/2+(p[0]-cs)*k,H/2-(p[1]-cys)*k],col('--b'),2);
+x.fillStyle=col('--ink');x.beginPath();x.arc(W/2,H/2,4,0,7);x.fill();
+const q=[];for(let t=0;t<=200;t++){const xx=cs-h+2*h*t/200;q.push([xx,sf(xx)])}
+let L2=0;for(let t=0;t<200;t++)L2+=dist(q[t],q[t+1]);
+$('r1a').textContent=fmt(L2/dist(q[0],q[200]),3)}
+$('z').oninput=d1;
+
+/* Experimento 2 */
+function walk(pts,r){let cur=pts[0],n=0,path=[cur];for(let i=1;i<pts.length;i++)if(dist(pts[i],cur)>=r){cur=pts[i];n++;path.push(cur)}return[n*r,path]}
+const rows=[];
+function tabla(){let h='<tr><th>Regla r</th><th>Longitud Koch</th><th>Longitud seno</th></tr>';
+for(let k=1;k<=5;k++){const r=Math.pow(3,-k),a=walk(P,r)[0],b=walk(sine,r)[0];rows.push([r,a,b]);h+='<tr><td>1/'+Math.pow(3,k)+'</td><td>'+fmt(a)+'</td><td>'+fmt(b)+'</td></tr>'}
+$('tb').innerHTML=h;
+const a=rows[3],b=rows[4],D=1+Math.log(b[1]/a[1])/Math.log(a[0]/b[0]);
+$('o2').innerHTML='La longitud del seno se estabiliza cerca de '+fmt(rows[4][2])+'. La de Koch sigue creciendo (≈ ×4/3 cada vez que la regla se divide entre 3). De ahí sale una estimación de dimensión ≈ <b>'+fmt(D)+'</b>, no 1.'}
+function d2(){const e=+$('rr').value,r=Math.pow(3,-e);$('rv').textContent='1/'+fmt(1/r,0);
+const[x,W,H]=g('c2',360,150),f=p=>[10+p[0]*340,H-12-p[1]*340];x.clearRect(0,0,W,H);
+const[Lk,path]=walk(P,r);line(x,P,f,col('--line'),3);line(x,path,f,col('--a'),1.5);
+path.forEach(p=>{const q=f(p);x.fillStyle=col('--ink');x.fillRect(q[0]-1.5,q[1]-1.5,3,3)});
+$('l2k').textContent=fmt(Lk);$('l2s').textContent=fmt(walk(sine,r)[0])}
+$('rr').oninput=d2;
+
+/* Experimento 3 */
+const Ks=[1,2,3,4,5],cnt=m=>{const s=new Set();for(const p of P)s.add(Math.min(m-1,Math.floor(p[0]*m))*100000+Math.floor(p[1]*m));return s};
+const Ns=Ks.map(k=>cnt(Math.pow(3,k)).size);
+const lx=Ks.map(k=>k*Math.log(3)),ly=Ns.map(Math.log);
+const mx=lx.reduce((a,b)=>a+b)/5,my=ly.reduce((a,b)=>a+b)/5;
+const slope=lx.reduce((a,v,i)=>a+(v-mx)*(ly[i]-my),0)/lx.reduce((a,v)=>a+(v-mx)**2,0);
+function d3(){const m=Math.max(2,Math.round(Math.pow(3,+$('mm').value)));$('mv').textContent=m+' × '+m;
+let[x,W,H]=g('c3',360,170);x.clearRect(0,0,W,H);
+const f=p=>[10+p[0]*340,H-12-p[1]*340],set=cnt(m);
+x.fillStyle=col('--b');x.globalAlpha=.3;
+set.forEach(key=>{const i=Math.floor(key/100000),j=key%100000;x.fillRect(10+i*340/m,H-12-(j+1)*340/m,340/m,340/m)});x.globalAlpha=1;
+x.strokeStyle=col('--line');x.lineWidth=.5;if(m<=60)for(let i=0;i<=m;i++){x.beginPath();x.moveTo(10+i*340/m,0);x.lineTo(10+i*340/m,H);x.stroke()}
+line(x,P,f,col('--a'),1.5);
+$('n3').textContent=set.size;
+[x,W,H]=g('c3b',360,170);x.clearRect(0,0,W,H);
+const X=v=>30+v/5.6*320,Y=v=>H-20-v/11*140;
+x.strokeStyle=col('--mut');x.lineWidth=1;x.beginPath();x.moveTo(30,10);x.lineTo(30,H-20);x.lineTo(350,H-20);x.stroke();
+x.setLineDash([]);x.beginPath();x.moveTo(X(0),Y(0));x.lineTo(X(5.5),Y(5.5));x.stroke();
+x.setLineDash([4,4]);x.beginPath();x.moveTo(X(0),Y(0));x.lineTo(X(5.5),Y(11));x.stroke();x.setLineDash([]);
+x.strokeStyle=col('--a');x.lineWidth=1.5;x.beginPath();x.moveTo(X(0),Y(my-slope*mx));x.lineTo(X(5.5),Y(my+slope*(5.5-mx)));x.stroke();
+lx.forEach((v,i)=>{x.fillStyle=col('--a');x.beginPath();x.arc(X(v),Y(ly[i]),4,0,7);x.fill()});
+x.fillStyle=col('--b');x.beginPath();x.arc(X(Math.log(m)),Y(Math.log(set.size)),5,0,7);x.fill();
+x.fillStyle=col('--mut');x.font='11px system-ui';x.fillText('ln m',320,H-6);x.fillText('ln N',4,14);x.fillText('pend. 1',X(4.4),Y(4.4)+14);x.fillText('pend. 2',X(3.6),Y(7.2)-4);
+$('d3').textContent=fmt(slope)}
+$('mm').oninput=d3;
+
+function all(){d1();d2();d3();$('dd').textContent='≈'+fmt(slope).replace('.',',')}
+tabla();all();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all);
+</script>
+</body>
+</html>
