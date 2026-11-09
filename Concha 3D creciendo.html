@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La concha del caracol en 3D</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1d2330;--muted:#8b93a3;--accent:#e8590c;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--fg:#eceff4;--muted:#7d8597;--accent:#ff8a4c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--fg:#eceff4;--muted:#7d8597;--accent:#ff8a4c;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#ov{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#ov line{stroke:var(--accent);stroke-width:2.5}#ov circle{fill:var(--accent)}
+#ov text{fill:var(--accent);font-weight:700;font-size:clamp(22px,3.6vw,40px)}
+#ov g{opacity:0;transition:opacity .5s}#ov g.on{opacity:1}
+.cap{position:fixed;left:0;right:0;bottom:calc(9% + env(safe-area-inset-bottom,0px));text-align:center;font-size:clamp(22px,4.2vw,54px);font-weight:700;letter-spacing:-.01em;opacity:0;transform:translateY(12px);transition:opacity .6s,transform .6s;pointer-events:none;padding:0 5%}
+.cap.on{opacity:1;transform:none}
+#cnt{position:fixed;left:16px;top:calc(14px + env(safe-area-inset-top,0px));display:flex;gap:22px;align-items:flex-end;flex-wrap:wrap;max-width:60%}
+#cnt div{display:flex;flex-direction:column}
+#cnt b{font-size:clamp(30px,6vw,64px);line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+#cnt small{font-size:clamp(12px,1.8vw,20px);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+#bar{width:100%;height:5px;background:var(--muted);opacity:.35;border-radius:3px;margin-top:10px;overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:var(--accent)}
+#ui{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:12px;display:flex;gap:8px;opacity:.35;transition:opacity .3s}
+#ui:hover{opacity:1}
+#ui button{background:none;border:1px solid var(--fg);color:var(--fg);border-radius:8px;padding:6px 12px;font-size:16px;cursor:pointer}
+</style></head><body>
+<canvas id="c"></canvas>
+<svg id="ov"><g id="lb"><line id="ln" x1="0" y1="0" x2="0" y2="0"/><circle id="dt" r="6"/><text id="tx" text-anchor="start">Manto</text></g></svg>
+<div id="cnt"><div><b id="nv">1.0</b><small>vueltas</small></div><div><b id="ns">0</b><small>secciones</small></div><div id="bar" style="width:100%"><i id="pb"></i></div></div>
+<div class="cap" id="cap">Manto: Adición + Rotación</div>
+<div id="ui"><button id="pz" aria-label="Pausa">❚❚</button><button id="rp" aria-label="Repetir">↻</button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const V=(x,y,z)=>new THREE.Vector3(x,y,z),$=id=>document.getElementById(id);
+const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(35,1,.01,100);
+scene.add(new THREE.HemisphereLight(0xffffff,0x8a6a44,.75));
+const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(3,6,5);scene.add(dl);
+const dl2=new THREE.DirectionalLight(0xffe6c8,.35);dl2.position.set(-4,2,-5);scene.add(dl2);
+const E=x=>x<=0?0:x>=1?1:x*x*(3-2*x),PI2=Math.PI*2;
+
+/* ---- Concha: espiral logarítmica que arranca en un punto (sin hueco inicial) ---- */
+const TH0=-10,TH=20.5,B=.13,A0=.07,RT=.62,ZS=.22,ROWS=800,COLS=36,PH=(-1.1-TH)%PI2;
+const Cp=th=>{const s=A0*Math.exp(B*th),a=th+PH;return{x:s*Math.cos(a),y:s*Math.sin(a),z:ZS*s,s,a}};
+const P=[],K=[],I=[];
+for(let i=0;i<=ROWS;i++){const th=TH0+(TH-TH0)*i/ROWS,c=Cp(th),rho=RT*c.s*E((th-TH0)/3),ux=Math.cos(c.a),uy=Math.sin(c.a);
+  for(let j=0;j<=COLS;j++){const f=PI2*j/COLS;
+    P.push(c.x+rho*Math.cos(f)*ux,c.y+rho*Math.cos(f)*uy,c.z+rho*Math.sin(f)*1.15);
+    const dk=Math.pow(Math.max(0,Math.sin(f*2+.8)),6)*.85,sh=.92+.08*Math.sin(th*9);
+    K.push((.91-.5*dk)*sh,(.77-.5*dk)*sh,(.56-.46*dk)*sh)}}
+for(let i=0;i<ROWS;i++)for(let j=0;j<COLS;j++){const a=i*(COLS+1)+j,b=a+COLS+1;I.push(a,b,a+1,b,b+1,a+1)}
+const sg=new THREE.BufferGeometry();
+sg.setAttribute('position',new THREE.Float32BufferAttribute(P,3));
+sg.setAttribute('color',new THREE.Float32BufferAttribute(K,3));
+sg.setIndex(I);sg.computeVertexNormals();sg.computeBoundingBox();
+const shell=new THREE.Mesh(sg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.4,metalness:.05,side:THREE.DoubleSide}));
+const SG=new THREE.Group();SG.add(shell);scene.add(SG);
+const bc=sg.boundingBox.getCenter(V());SG.position.set(-bc.x,-bc.y,-bc.z);
+const apex=SG.position.clone(),shellC=V(0,0,0);
+/* anillo = borde (manto) que va añadiendo material */
+const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.05,8,48),new THREE.MeshBasicMaterial({color:0xff7a1a}));
+ring.matrixAutoUpdate=false;SG.add(ring);
+function setRing(th){const c=Cp(th),r=RT*c.s;
+  ring.matrix.makeBasis(V(Math.cos(c.a)*r,Math.sin(c.a)*r,0),V(0,0,r*1.15),V(-Math.sin(c.a)*r,Math.cos(c.a)*r,0));ring.matrix.setPosition(c.x,c.y,c.z)}
+
+/* ---- Línea de tiempo ---- */
+const TS=TH0+PI2,N=44,DL=(TH-TS)/N,INIT=Math.round((TS-TH0)/DL),G0=4,G1=26;
+let T=0,paused=false,dAz=0,dEl=0,last=performance.now(),drag=null;
+function rs(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener('resize',rs);rs();
+$('pz').onclick=()=>paused=!paused;
+$('rp').onclick=()=>{T=0;paused=false};
+const cv=$('c');
+cv.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!drag)return;dAz-=(e.clientX-drag[0])*.006;dEl=Math.max(-.5,Math.min(.8,dEl+(e.clientY-drag[1])*.004));drag=[e.clientX,e.clientY]});
+cv.addEventListener('pointerup',()=>drag=null);
+const cap=$('cap'),lb=$('lb'),setA=(id,o)=>{const n=$(id);for(const k in o)n.setAttribute(k,o[k])};
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;if(!paused)T+=dt;
+  const g=Math.max(0,Math.min(1,(T-G0)/(G1-G0))),u=g*N,k=Math.floor(Math.min(u,N-1e-9));
+  const thStep=g>=1?TH:TS+(k+E(u-k))*DL,thCam=TS+u*DL;
+  /* concha: se añade una sección a la vez */
+  sg.setDrawRange(0,Math.max(1,Math.floor((thStep-TH0)/(TH-TH0)*ROWS))*COLS*6);
+  ring.visible=g<1;setRing(thStep);
+  /* cámara: sigue el tamaño actual de la concha */
+  const sCam=A0*Math.exp(B*thCam),w=sCam/(A0*Math.exp(B*TH)),tg=apex.clone().lerp(shellC,w),d=6.9*sCam;
+  const az=T*.1+.5*Math.sin(T*.4)+dAz,el=.22+dEl;
+  cam.position.set(tg.x+d*Math.cos(el)*Math.sin(az),tg.y+d*Math.sin(el),tg.z+d*Math.cos(el)*Math.cos(az));cam.lookAt(tg);
+  /* contador */
+  $('nv').textContent=((thStep-TH0)/PI2).toFixed(1);
+  $('ns').textContent=INIT+(g>=1?N:k);
+  $('pb').style.width=(100*(thStep-TH0)/(TH-TH0))+'%';
+  /* Manto: solo al comienzo */
+  const on=T>=.8&&T<4.2;lb.classList.toggle('on',on);cap.classList.toggle('on',on);
+  if(on){cam.updateMatrixWorld();const c=Cp(thStep),v=V(c.x,c.y,c.z).add(SG.position).project(cam),x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight;
+    setA('ln',{x1:x,y1:y,x2:x+70,y2:y-70});setA('dt',{cx:x,cy:y});setA('tx',{x:x+78,y:y-72})}
+  R.render(scene,cam);requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script></body></html>

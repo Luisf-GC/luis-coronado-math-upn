@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conjunto de Cantor</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light;
+--bg:#fafaf7;--fg:#1d2230;--mut:#6b7285;--bar:#2457d6;--cut:#e5484d;--card:#ffffff;--line:#dcdfe8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12141b;--fg:#eef0f6;--mut:#9aa1b5;--bar:#6f9bff;--cut:#ff6b70;--card:#1b1e28;--line:#2d3243}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#12141b;--fg:#eef0f6;--mut:#9aa1b5;--bar:#6f9bff;--cut:#ff6b70;--card:#1b1e28;--line:#2d3243}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 28px}
+h1{font-size:clamp(1.6rem,4vw,2.4rem);margin:0 0 12px;letter-spacing:-.02em}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+svg{width:100%;height:auto;display:block}
+.row{opacity:0;transform:translateY(-8px);transition:opacity .5s,transform .5s}
+.row.on{opacity:1;transform:none}
+.bar{fill:var(--bar)}
+.cut{fill:var(--cut);opacity:1}
+.row.on .cut{opacity:0;transition:opacity .8s .9s}
+.lbl{fill:var(--mut);font-size:15px;font-family:inherit}
+.tick{fill:var(--mut);font-size:14px;text-anchor:middle;font-family:inherit}
+.cap{font-size:clamp(1.1rem,2.6vw,1.5rem);font-weight:600;text-align:center;margin:14px 0 10px;min-height:1.6em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center}
+.stat small{display:block;color:var(--mut);font-size:.8rem}
+.stat b{font-size:clamp(1.1rem,3vw,1.6rem)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+button{font:inherit;font-weight:600;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+button.main{background:var(--bar);color:#fff;border-color:var(--bar)}
+button:disabled{opacity:.4;cursor:default}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--line);transition:.3s}
+.dots i.on{background:var(--bar);transform:scale(1.3)}
+</style>
+</head>
+<body>
+<main>
+<h1>Conjunto de Cantor</h1>
+<div class="stage"><svg id="s" viewBox="0 0 900 400" role="img" aria-label="Construcción del conjunto de Cantor"></svg></div>
+<div class="cap" id="cap"></div>
+<div class="stats">
+<div class="stat"><small>Paso</small><b id="n">0</b></div>
+<div class="stat"><small>Segmentos</small><b id="c"></b></div>
+<div class="stat"><small>Longitud total</small><b id="l"></b></div>
+</div>
+<div class="dots" id="dots"></div>
+<div class="ctl">
+<button id="rs">Reiniciar</button>
+<button id="pv">Anterior</button>
+<button id="pl" class="main">Reproducir</button>
+<button id="nx">Siguiente</button>
+</div>
+</main>
+<script>
+const N=6,X0=50,W=820,RH=52,H=16,Y0=40;
+const svg=document.getElementById('s');
+const NS='http://www.w3.org/2000/svg';
+function mk(t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt)e.textContent=txt;return e}
+function segs(n){let s=[[0,1]];for(let i=0;i<n;i++)s=s.flatMap(([a,b])=>{const w=(b-a)/3;return[[a,a+w],[b-w,b]]});return s}
+const rows=[];
+for(let n=0;n<=N;n++){
+  const y=Y0+n*RH,g=mk('g',{class:'row'});
+  g.appendChild(mk('text',{x:14,y:y+H-2,class:'lbl'},n));
+  if(n>0){segs(n-1).forEach(([a,b])=>{const w=(b-a)/3;
+    g.appendChild(mk('rect',{x:X0+(a+w)*W,y:y,width:w*W,height:H,class:'cut'}))})}
+  segs(n).forEach(([a,b])=>g.appendChild(mk('rect',{x:X0+a*W,y:y,width:(b-a)*W,height:H,rx:2,class:'bar'})));
+  if(n===0){g.appendChild(mk('text',{x:X0,y:y-8,class:'tick'},'0'));g.appendChild(mk('text',{x:X0+W,y:y-8,class:'tick'},'1'))}
+  if(n===1){g.appendChild(mk('text',{x:X0+W/3,y:y+H+16,class:'tick'},'1/3'));g.appendChild(mk('text',{x:X0+2*W/3,y:y+H+16,class:'tick'},'2/3'))}
+  svg.appendChild(g);rows.push(g);
+}
+const dots=document.getElementById('dots');
+for(let i=0;i<=N;i++)dots.appendChild(document.createElement('i'));
+const caps=['Segmento [0, 1]'];
+for(let i=1;i<N;i++)caps.push('Quita el tercio central');
+caps.push('Repetir sin fin → polvo de Cantor');
+let step=0,timer=null;
+function go(n){
+  step=Math.max(0,Math.min(N,n));
+  rows.forEach((g,i)=>g.classList.toggle('on',i<=step));
+  [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===step));
+  document.getElementById('cap').textContent=caps[step];
+  document.getElementById('n').textContent=step;
+  document.getElementById('c').innerHTML='2<sup>'+step+'</sup> = '+Math.pow(2,step);
+  document.getElementById('l').innerHTML='(2/3)<sup>'+step+'</sup> ≈ '+Math.pow(2/3,step).toFixed(3);
+  document.getElementById('pv').disabled=step===0;
+  document.getElementById('nx').disabled=step===N;
+}
+function stop(){clearInterval(timer);timer=null;document.getElementById('pl').textContent='Reproducir'}
+function play(){
+  if(timer){stop();return}
+  if(step>=N)go(0);
+  document.getElementById('pl').textContent='Pausa';
+  timer=setInterval(()=>{if(step>=N){stop();return}go(step+1);if(step>=N)stop()},1900);
+}
+document.getElementById('pl').onclick=play;
+document.getElementById('nx').onclick=()=>{stop();go(step+1)};
+document.getElementById('pv').onclick=()=>{stop();go(step-1)};
+document.getElementById('rs').onclick=()=>{stop();go(0)};
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){stop();go(step+1)}
+  else if(e.key==='ArrowLeft'){stop();go(step-1)}
+  else if(e.key===' '){e.preventDefault();play()}
+});
+go(0);
+</script>
+</body>
+</html>

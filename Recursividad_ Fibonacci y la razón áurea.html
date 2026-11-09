@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recursividad: Fibonacci y la razón áurea</title>
+<style>
+:root{--bg:#faf8f3;--fg:#1d1b18;--mut:#8a857c;--a:#c4561f;--b:#2a7f87;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151412;--fg:#f1ede4;--mut:#8f897d;--a:#ef8a54;--b:#5fc0c8}}
+:root[data-theme="dark"]{--bg:#151412;--fg:#f1ede4;--mut:#8f897d;--a:#ef8a54;--b:#5fc0c8}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{display:flex;flex-direction:column}
+header{padding:14px 20px 0;text-align:center}
+header small{color:var(--mut);letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+h1{margin:2px 0 0;font-size:clamp(20px,4vw,30px);font-weight:650}
+#w{flex:1;min-height:0;position:relative}
+canvas{width:100%;height:100%;display:block}
+#pr{position:absolute;left:0;bottom:0;height:3px;background:var(--a);width:0}
+footer{padding:8px 20px 16px;text-align:center}
+#cap{margin:0 auto 10px;max-width:640px;font-size:clamp(14px,2.4vw,17px);color:var(--mut);min-height:2.6em}
+.ctl{display:flex;align-items:center;justify-content:center;gap:10px}
+button{background:none;border:1.5px solid var(--mut);color:var(--fg);border-radius:999px;width:40px;height:40px;font-size:16px;cursor:pointer}
+button:hover{border-color:var(--a)}
+#dots{display:flex;gap:8px;margin-left:8px}
+#dots i{width:9px;height:9px;border-radius:50%;background:var(--mut);opacity:.4;cursor:pointer}
+#dots i.on{background:var(--a);opacity:1}
+</style></head><body>
+<header><small id="st"></small><h1 id="ttl"></h1></header>
+<div id="w"><canvas id="c"></canvas><div id="pr"></div></div>
+<footer><p id="cap"></p>
+<div class="ctl"><button id="pv" aria-label="Anterior">‹</button><button id="pp" aria-label="Pausa">❚❚</button><button id="nx" aria-label="Siguiente">›</button><span id="dots"></span></div></footer>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W=0,H=0,C={},ga=1;
+function rs(){const d=devicePixelRatio||1,r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',rs);
+const cs=getComputedStyle(document.documentElement);
+function colors(){const g=n=>cs.getPropertyValue(n).trim();C={bg:g('--bg'),fg:g('--fg'),mut:g('--mut'),a:g('--a'),b:g('--b')}}
+const cl=x=>Math.max(0,Math.min(1,x)),ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,A=a=>ctx.globalAlpha=ga*a;
+const fm=x=>x.toFixed(6).replace('.',',');
+function T(s,x,y,sz,col,al='center',w=500){ctx.font=w+' '+sz+'px system-ui,sans-serif';ctx.fillStyle=col;ctx.textAlign=al;ctx.textBaseline='middle';ctx.fillText(s,x,y)}
+const F=[0,1];for(let i=0;i<22;i++)F.push(F[i]+F[i+1]);
+
+/* Escena 1: la regla recursiva */
+function s1(t){
+  const n=9,g=10,bw=Math.max(28,Math.min(70,(W-30)/n-g)),x0=(W-(n*(bw+g)-g))/2,y=H*.62;
+  const X=i=>x0+i*(bw+g)+bw/2,ta=i=>i<2?1+i*.6:2.6+(i-2)*1.1,fs=Math.min(34,W/14);
+  A(1);T('F(n) = F(n−1) + F(n−2)',W/2,H*.13,fs,C.fg,'center',600);
+  A(cl((t-.4)/.6));T('Casos base: F(0) = 0 y F(1) = 1',W/2,H*.13+fs+10,Math.min(18,W/26),C.mut);
+  A(1);
+  for(let i=0;i<n;i++){
+    const a=ta(i);
+    if(i>=2){
+      const p=cl((t-(a-.9))/.8);
+      if(p>0){
+        ctx.save();ctx.setLineDash([p*Math.abs(X(i)-X(i-2))*1.6,2000]);ctx.strokeStyle=C.b;ctx.lineWidth=2.5;ctx.beginPath();
+        [i-2,i-1].forEach(j=>{ctx.moveTo(X(j),y-bw/2-4);ctx.quadraticCurveTo((X(j)+X(i))/2,y-bw*2,X(i),y-bw/2-4)});
+        ctx.stroke();ctx.restore();
+        if(p>.6&&t<a+.9)T(F[i-2]+' + '+F[i-1]+' = '+F[i],X(i-1),y-bw*1.75,Math.min(20,bw*.4),C.b,'center',600);
+      }
+    }
+    if(t>a){
+      const k=.6+.4*ease(cl((t-a)/.4)),isNew=t<a+.6;
+      const hl=(i>=1&&i+1<n&&t>ta(i+1)-.9&&t<ta(i+1)+.5)||(i+2<n&&t>ta(i+2)-.9&&t<ta(i+2)+.5);
+      ctx.save();ctx.translate(X(i),y);ctx.scale(k,k);ctx.lineWidth=hl||isNew?3:1.5;
+      ctx.strokeStyle=isNew&&i>=2?C.a:hl?C.b:C.mut;ctx.beginPath();ctx.roundRect(-bw/2,-bw/2,bw,bw,8);ctx.stroke();ctx.restore();
+      T(F[i],X(i),y,bw*.42,C.fg,'center',700);T('F'+i,X(i),y+bw/2+16,Math.min(15,bw*.3),C.mut);
+    }
+  }
+}
+
+/* Escena 2: árbol de llamadas de F(5) */
+const tree=[];
+function mk(n,d,par){const nd={n,d,par,i:tree.length,h:0};tree.push(nd);if(n>1){nd.k=[mk(n-1,d+1,nd),mk(n-2,d+1,nd)];nd.h=1+Math.max(nd.k[0].h,nd.k[1].h)}return nd}
+const root=mk(5,0,null);let lf=0;
+(function pos(nd){if(!nd.k)nd.x=lf++;else{nd.k.forEach(pos);nd.x=(nd.k[0].x+nd.k[1].x)/2}})(root);
+function s2(t){
+  const m=34,r=Math.max(11,Math.min(20,(W-2*m)/14-3)),px=n=>m+n.x/(lf-1)*(W-2*m),py=n=>40+n.d*(H-110)/4,TV=.6+tree.length*.4+.6;
+  let cnt=0;
+  tree.forEach(n=>{const a=.6+n.i*.4;if(t>a)cnt++;
+    if(n.par&&t>a){const p=ease(cl((t-a)/.3)),x0=px(n.par),y0=py(n.par);A(1);ctx.strokeStyle=C.mut;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0+(px(n)-x0)*p,y0+(py(n)-y0)*p);ctx.stroke()}});
+  tree.forEach(n=>{
+    const a=.6+n.i*.4;if(t<a+.1)return;
+    const k=ease(cl((t-a)/.3)),sv=t>TV+n.h*.8,x=px(n),y=py(n);A(1);
+    ctx.save();ctx.translate(x,y);ctx.scale(k,k);ctx.beginPath();ctx.arc(0,0,r,0,7);
+    ctx.fillStyle=n.k?C.bg:C.b;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=n.k?C.a:C.b;ctx.stroke();ctx.restore();
+    T(sv?F[n.n]:'F'+n.n,x,y,r*(sv?1.05:.85),n.k?C.fg:C.bg,'center',700);
+  });
+  A(1);T('Llamadas: '+cnt,16,18,Math.min(16,W/24),C.mut,'left',600);
+  if(t>TV+3.6){A(cl((t-TV-3.6)/.6));T('F(3) se calcula 2 veces y F(2), 3 veces',W/2,H-16,Math.min(17,W/26),C.a,'center',600)}
+}
+
+/* Escena 3: cuadrados de Fibonacci y espiral */
+const SD=[1,1,2,3,5,8,13,21],DR=['up','right','down','left'],sq=[];
+{let b=[0,0,1,1];SD.forEach((s,i)=>{let x=0,y=0;
+  if(i){const d=DR[i%4];if(d=='right'){x=b[2];y=b[1]}else if(d=='down'){x=b[0];y=b[3]}else if(d=='left'){x=b[0]-s;y=b[1]}else{x=b[0];y=b[1]-s}}
+  b=[Math.min(b[0],x),Math.min(b[1],y),Math.max(b[2],x+s),Math.max(b[3],y+s)];sq.push({x,y,s,d:DR[i%4],b:b.slice()})})}
+function s3(t){
+  const k=(t-1)/1.3,i=Math.max(0,Math.min(7,Math.floor(k))),e=ease(cl((k-i)*1.5)),b0=sq[Math.max(0,i-1)].b,b1=sq[i].b;
+  const b=k<0?sq[0].b:b0.map((v,j)=>v+(b1[j]-v)*e),w=b[2]-b[0],h=b[3]-b[1],sc=Math.min((W-50)/w,(H-90)/h);
+  const cx=(b[0]+b[2])/2,cy=(b[1]+b[3])/2,X=v=>W/2+(v-cx)*sc,Y=v=>(H-30)/2+(v-cy)*sc;
+  sq.forEach((q,j)=>{
+    const a=1+j*1.3;if(t<a)return;A(cl((t-a)/.5));
+    const hu=j*38+10;ctx.fillStyle='hsla('+hu+',65%,55%,.2)';ctx.strokeStyle='hsl('+hu+',65%,50%)';ctx.lineWidth=2;
+    ctx.fillRect(X(q.x),Y(q.y),q.s*sc,q.s*sc);ctx.strokeRect(X(q.x),Y(q.y),q.s*sc,q.s*sc);
+    T(q.s,X(q.x+q.s/2),Y(q.y+q.s/2),Math.max(10,Math.min(q.s*sc*.4,44)),C.fg,'center',700);
+    const p=cl((t-a-.3)/.9);
+    if(p>0){const c={right:[q.x,q.y+q.s,1.5,2],down:[q.x,q.y,0,.5],left:[q.x+q.s,q.y,.5,1],up:[q.x+q.s,q.y+q.s,1,1.5]}[q.d];
+      ctx.strokeStyle=C.fg;ctx.lineWidth=3;ctx.beginPath();ctx.arc(X(c[0]),Y(c[1]),q.s*sc,c[2]*Math.PI,(c[2]+(c[3]-c[2])*p)*Math.PI);ctx.stroke()}
+  });
+  if(t>1){A(1);T(i<2?'Empezamos con dos cuadrados de lado 1':SD[i-2]+' + '+SD[i-1]+' = '+SD[i]+'  →  nuevo cuadrado de lado '+SD[i],W/2,H-16,Math.min(19,W/24),C.fg,'center',600)}
+}
+
+/* Escena 4: razón áurea */
+function s4(t){
+  const PHI=(1+Math.sqrt(5))/2,L=50,R=W-30,top=36,bot=H*.62,Y=v=>bot-(v-1)*(bot-top),X=n=>L+(n-1)/13*(R-L),ta=n=>.8+(n-1)*.65;
+  A(1);ctx.strokeStyle=C.mut;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L,top-10);ctx.lineTo(L,bot+6);ctx.stroke();
+  T('2',L-12,Y(2),13,C.mut);T('1',L-12,Y(1),13,C.mut);
+  ctx.save();ctx.setLineDash([6,6]);ctx.strokeStyle=C.a;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(L,Y(PHI));ctx.lineTo(R,Y(PHI));ctx.stroke();ctx.restore();
+  T('φ ≈ 1,618',R,Y(PHI)-14,14,C.a,'right',600);
+  let m=0;for(let n=1;n<=14;n++)if(t>ta(n))m=n;
+  ctx.strokeStyle=C.b;ctx.lineWidth=2.5;ctx.beginPath();
+  for(let n=1;n<=m;n++){const v=F[n+1]/F[n];n==1?ctx.moveTo(X(n),Y(v)):ctx.lineTo(X(n),Y(v))}ctx.stroke();
+  for(let n=1;n<=m;n++){ctx.beginPath();ctx.arc(X(n),Y(F[n+1]/F[n]),n==m?7:4.5,0,7);ctx.fillStyle=n==m?C.a:C.b;ctx.fill()}
+  if(m){const fs=Math.min(22,W/18);T('F('+(m+1)+') / F('+m+') = '+F[m+1]+' / '+F[m]+' = '+fm(F[m+1]/F[m]),W/2,H*.76,fs,C.fg,'center',650)}
+  T('n →',R,bot+22,13,C.mut,'right');
+  const te=ta(14)+.8;
+  if(t>te){A(cl((t-te)/.7));const fs=Math.min(22,W/18);
+    T('φ también se define recursivamente:',W/2,H*.85,fs*.75,C.mut);
+    T('φ = 1 + 1 / φ    →    φ² = φ + 1',W/2,H*.85+fs+6,fs,C.a,'center',700)}
+}
+
+const SC=[
+ {t:'Una regla que se usa a sí misma',c:'Un término nuevo se define con los anteriores: dos casos base y una regla bastan.',d:11,f:s1},
+ {t:'Cómo se desarrolla la recursión',c:'Para calcular F(5), la función se llama a sí misma hasta llegar a los casos base; luego los resultados suben.',d:12.5,f:s2},
+ {t:'Recursión en la geometría',c:'Cada cuadrado nuevo tiene por lado la suma de los dos anteriores. Los arcos dibujan la espiral áurea.',d:13.5,f:s3},
+ {t:'La razón áurea',c:'Al crecer n, el cociente F(n+1)/F(n) se acerca a φ ≈ 1,618…, el número que cumple φ = 1 + 1/φ.',d:14,f:s4}
+];
+const ttl=document.getElementById('ttl'),st=document.getElementById('st'),cap=document.getElementById('cap'),pr=document.getElementById('pr'),dots=document.getElementById('dots'),pp=document.getElementById('pp');
+SC.forEach((_,j)=>{const d=document.createElement('i');d.onclick=()=>go(j);dots.appendChild(d)});
+let si=0,t=0,play=true,last=performance.now();
+function go(i){si=(i+SC.length)%SC.length;t=0;ttl.textContent=SC[si].t;cap.textContent=SC[si].c;st.textContent=(si+1)+' / '+SC.length;[...dots.children].forEach((d,j)=>d.classList.toggle('on',j==si))}
+function tog(){play=!play;pp.textContent=play?'❚❚':'▶'}
+pv.onclick=()=>go(si-1);nx.onclick=()=>go(si+1);pp.onclick=tog;
+addEventListener('keydown',e=>{if(e.key==' '){e.preventDefault();tog()}else if(e.key=='ArrowRight')go(si+1);else if(e.key=='ArrowLeft')go(si-1)});
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(play){t+=dt;if(t>=SC[si].d)go(si+1)}
+  colors();ctx.clearRect(0,0,W,H);ga=Math.min(1,t/.5,(SC[si].d-t)/.5);ctx.globalAlpha=ga;
+  SC[si].f(t);ctx.globalAlpha=1;pr.style.width=(t/SC[si].d*100)+'%';
+  requestAnimationFrame(loop);
+}
+rs();go(0);requestAnimationFrame(loop);
+</script></body></html>
